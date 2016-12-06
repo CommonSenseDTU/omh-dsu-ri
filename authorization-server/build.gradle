@@ -1,1 +1,5 @@
 description = 'A simple OAuth2 authorisation server backed by a user data store.'
+
+dependencies {
+    runtime 'com.github.fge:json-schema-validator:2.2.5'
+}

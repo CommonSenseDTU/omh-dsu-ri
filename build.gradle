@@ -1,3 +1,5 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
 buildscript {
     repositories {
         mavenLocal()
@@ -105,6 +107,14 @@ configure([
         }
     }
     build.dependsOn copyArchiveJarToDockerContext
+
+    processResources {
+        filesMatching('application.yml') {
+            filter ReplaceTokens, tokens: [
+                    'version': version
+            ]
+        }
+    }
 }
 
 // FIXME add integration test support

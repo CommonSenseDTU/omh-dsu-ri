@@ -39,3 +39,6 @@ spring:
 logging:
   level:
     org.springframework: INFO
+
+info:
+   version: @version@
