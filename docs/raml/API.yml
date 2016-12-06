@@ -72,6 +72,10 @@ securitySchemes:
         description: the latest creation timestamp of the data points to return, exclusive, in ISO8601 format
         type: string
         example: "2013-04-05T07:25:00.123+03:00"
+      study_id:
+        description: the guid of the study the data points have been submitted for
+        type: string
+        example: 123e4567-e89b-12d3-a456-426655440000
     responses:
       200:
         description: a list of matching data points belonging to the user associated with the access token
