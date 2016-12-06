@@ -19,6 +19,7 @@ package org.openmhealth.dsu.repository;
 import com.google.common.collect.Range;
 import org.openmhealth.dsu.domain.DataPointSearchCriteria;
 import org.openmhealth.schema.domain.omh.DataPoint;
+import org.openmhealth.schema.domain.ork.Confidentiality;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -35,6 +36,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 /**
  * @author Emerson Farrugia
+ * @author Anders Borch
  */
 public class MongoDataPointRepositoryImpl implements CustomDataPointRepository {
 
@@ -86,6 +88,8 @@ public class MongoDataPointRepositoryImpl implements CustomDataPointRepository {
             addCreationTimestampCriteria(query, searchCriteria.getCreationTimestampRange().get());
         }
 
+        addStudyCriteria(query, searchCriteria.getStudyGuid());
+
         return query;
     }
 
@@ -114,6 +118,30 @@ public class MongoDataPointRepositoryImpl implements CustomDataPointRepository {
             }
 
             query.addCriteria(timestampCriteria);
+        }
+    }
+
+    void addStudyCriteria(Query query, String studyGuid) {
+        if (studyGuid != null) {
+            query.addCriteria(
+                    where("header.consent.confidentiality")
+                            .ne(Confidentiality.PRIVATE.toString()));
+            query.addCriteria(new Criteria().orOperator(
+                    new Criteria().andOperator(
+                            where("header.consent.study.guid").is(studyGuid),
+                            where("header.consent.withdrawn").is(false),
+                            new Criteria().orOperator(
+                                    where("header.consent.expiry_date_time").gt(OffsetDateTime.now()),
+                                    where("header.consent.expiry_date_time").exists(false)
+                            )
+                    ),
+                    where("header.consent.confidentiality")
+                            .is(Confidentiality.PUBLIC.toString()),
+                    where("header.consent").exists(false)
+            ));
+        }
+        else {
+            query.addCriteria(where("header.consent").exists(false));
         }
     }
 }

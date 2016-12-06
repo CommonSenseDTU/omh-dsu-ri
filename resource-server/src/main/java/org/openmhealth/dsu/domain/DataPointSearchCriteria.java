@@ -42,6 +42,7 @@ public class DataPointSearchCriteria {
     private String schemaName;
     private SchemaVersion schemaVersion;
     private Range<OffsetDateTime> creationTimestampRange;
+    private String studyGuid;
 
     public DataPointSearchCriteria(String userId, String schemaNamespace, String schemaName, String schemaVersion) {
 
@@ -85,5 +86,13 @@ public class DataPointSearchCriteria {
 
     public void setCreationTimestampRange(Range<OffsetDateTime> creationTimestampRange) {
         this.creationTimestampRange = creationTimestampRange;
+    }
+
+    public String getStudyGuid() {
+        return studyGuid;
+    }
+
+    public void setStudyGuid(String studyGuid) {
+        this.studyGuid = studyGuid;
     }
 }

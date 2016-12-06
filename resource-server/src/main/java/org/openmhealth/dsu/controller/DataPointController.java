@@ -58,6 +58,7 @@ public class DataPointController {
     public static final String SCHEMA_NAMESPACE_PARAMETER = "schema_namespace";
     public static final String SCHEMA_NAME_PARAMETER = "schema_name";
     public static final String SCHEMA_VERSION_PARAMETER = "schema_version";
+    public static final String STUDY_GUID_PARAMETER = "study_id";
 
     public static final String RESULT_OFFSET_PARAMETER = "skip";
     public static final String RESULT_LIMIT_PARAMETER = "limit";
@@ -96,6 +97,7 @@ public class DataPointController {
             @RequestParam(value = CREATED_BEFORE_PARAMETER, required = false) final OffsetDateTime createdBefore,
             @RequestParam(value = RESULT_OFFSET_PARAMETER, defaultValue = "0") final Integer offset,
             @RequestParam(value = RESULT_LIMIT_PARAMETER, defaultValue = DEFAULT_RESULT_LIMIT) final Integer limit,
+            @RequestParam(value = STUDY_GUID_PARAMETER, required = false) final String studyGuid,
             Authentication authentication) {
 
         // TODO add validation or explicitly comment that this is handled using exception translators
@@ -108,12 +110,14 @@ public class DataPointController {
 
         if (createdOnOrAfter != null && createdBefore != null) {
             searchCriteria.setCreationTimestampRange(Range.closedOpen(createdOnOrAfter, createdBefore));
-        }
-        else if (createdOnOrAfter != null) {
+        } else if (createdOnOrAfter != null) {
             searchCriteria.setCreationTimestampRange(Range.atLeast(createdOnOrAfter));
-        }
-        else if (createdBefore != null) {
+        } else if (createdBefore != null) {
             searchCriteria.setCreationTimestampRange(Range.lessThan(createdBefore));
+        }
+
+        if (studyGuid != null) {
+            searchCriteria.setStudyGuid(studyGuid);
         }
 
         Iterable<DataPoint> dataPoints = dataPointService.findBySearchCriteria(searchCriteria, offset, limit);

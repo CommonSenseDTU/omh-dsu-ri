@@ -31,7 +31,7 @@ subprojects {
 
     ext {
         javaVersion = 1.8
-        omhSchemaSdkVersion = '1.0.5'
+        omhSchemaSdkVersion = '1.1.0'
         mailApiVersion = '1.5.2'
     }
 
