@@ -20,8 +20,12 @@ import com.google.common.collect.Range;
 import org.openmhealth.dsu.domain.DataPointSearchCriteria;
 import org.openmhealth.dsu.domain.EndUserUserDetails;
 import org.openmhealth.dsu.service.DataPointService;
+import org.openmhealth.dsu.service.SurveyService;
 import org.openmhealth.schema.domain.omh.DataPoint;
 import org.openmhealth.schema.domain.omh.DataPointHeader;
+import org.openmhealth.schema.domain.ork.Confidentiality;
+import org.openmhealth.schema.domain.ork.InformedConsent;
+import org.openmhealth.schema.domain.ork.Survey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.openmhealth.dsu.configuration.OAuth2Properties.*;
@@ -58,7 +63,7 @@ public class DataPointController {
     public static final String SCHEMA_NAMESPACE_PARAMETER = "schema_namespace";
     public static final String SCHEMA_NAME_PARAMETER = "schema_name";
     public static final String SCHEMA_VERSION_PARAMETER = "schema_version";
-    public static final String STUDY_GUID_PARAMETER = "study_id";
+    public static final String SURVEY_GUID_PARAMETER = "survey_id";
 
     public static final String RESULT_OFFSET_PARAMETER = "skip";
     public static final String RESULT_LIMIT_PARAMETER = "limit";
@@ -66,6 +71,9 @@ public class DataPointController {
 
     @Autowired
     private DataPointService dataPointService;
+
+    @Autowired
+    private SurveyService surveyService;
 
     /**
      * Reads data points.
@@ -97,7 +105,7 @@ public class DataPointController {
             @RequestParam(value = CREATED_BEFORE_PARAMETER, required = false) final OffsetDateTime createdBefore,
             @RequestParam(value = RESULT_OFFSET_PARAMETER, defaultValue = "0") final Integer offset,
             @RequestParam(value = RESULT_LIMIT_PARAMETER, defaultValue = DEFAULT_RESULT_LIMIT) final Integer limit,
-            @RequestParam(value = STUDY_GUID_PARAMETER, required = false) final String studyGuid,
+            @RequestParam(value = SURVEY_GUID_PARAMETER, required = false) final String surveyGuid,
             Authentication authentication) {
 
         // TODO add validation or explicitly comment that this is handled using exception translators
@@ -116,8 +124,8 @@ public class DataPointController {
             searchCriteria.setCreationTimestampRange(Range.lessThan(createdBefore));
         }
 
-        if (studyGuid != null) {
-            searchCriteria.setStudyGuid(studyGuid);
+        if (surveyGuid != null) {
+            searchCriteria.setSurveyGuid(surveyGuid);
         }
 
         Iterable<DataPoint> dataPoints = dataPointService.findBySearchCriteria(searchCriteria, offset, limit);
@@ -185,7 +193,20 @@ public class DataPointController {
 
         dataPointService.save(dataPoint);
 
+        addParticipantToSurvey(dataPoint, endUserId);
+
         return new ResponseEntity<>(CREATED);
+    }
+
+    private void addParticipantToSurvey(@RequestBody @Valid DataPoint dataPoint, String endUserId) {
+        InformedConsent consent = dataPoint.getHeader().getConsent();
+        if (consent != null && consent.getConfidentiality() != Confidentiality.PRIVATE) {
+            Survey survey = surveyService.findOneWithoutParticipantId(consent.getSurveyId(), endUserId);
+            if (survey != null) {
+                survey.getParticipantIds().add(endUserId);
+                surveyService.save(survey);
+            }
+        }
     }
 
     // this is currently implemented using reflection, until we see other use cases where mutability would be useful

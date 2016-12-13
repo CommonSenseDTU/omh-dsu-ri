@@ -29,4 +29,7 @@ public interface OAuth2Properties {
     String DATA_POINT_READ_SCOPE = "read_data_points";
     String DATA_POINT_WRITE_SCOPE = "write_data_points";
     String DATA_POINT_DELETE_SCOPE = "delete_data_points";
+    String SURVEY_READ_SCOPE = "read_surveys";
+    String SURVEY_WRITE_SCOPE = "write_surveys";
+    String SURVEY_DELETE_SCOPE = "delete_surveys";
 }

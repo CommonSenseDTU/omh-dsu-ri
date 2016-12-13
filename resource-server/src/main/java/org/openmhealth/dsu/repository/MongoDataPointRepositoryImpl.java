@@ -88,7 +88,8 @@ public class MongoDataPointRepositoryImpl implements CustomDataPointRepository {
             addCreationTimestampCriteria(query, searchCriteria.getCreationTimestampRange().get());
         }
 
-        addStudyCriteria(query, searchCriteria.getStudyGuid());
+        addSurveyCriteria(query, searchCriteria.getSurveyGuid());
+
 
         return query;
     }
@@ -121,14 +122,14 @@ public class MongoDataPointRepositoryImpl implements CustomDataPointRepository {
         }
     }
 
-    void addStudyCriteria(Query query, String studyGuid) {
-        if (studyGuid != null) {
+    void addSurveyCriteria(Query query, String surveyGuid) {
+        if (surveyGuid != null) {
             query.addCriteria(
                     where("header.consent.confidentiality")
                             .ne(Confidentiality.PRIVATE.toString()));
             query.addCriteria(new Criteria().orOperator(
                     new Criteria().andOperator(
-                            where("header.consent.study.guid").is(studyGuid),
+                            where("header.consent.surveyGuid").is(surveyGuid),
                             where("header.consent.withdrawn").is(false),
                             new Criteria().orOperator(
                                     where("header.consent.expiry_date_time").gt(OffsetDateTime.now()),
