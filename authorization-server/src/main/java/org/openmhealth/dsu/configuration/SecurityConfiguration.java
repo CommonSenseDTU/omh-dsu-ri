@@ -26,6 +26,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 
 /**
@@ -33,6 +34,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
  * Spring Boot's security configuration.
  *
  * @author Emerson Farrugia
+ * @author Anders Borch
  */
 @Configuration
 @EnableWebSecurity
@@ -58,5 +60,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable();
+        http.headers().addHeaderWriter(
+                new StaticHeadersWriter("Access-Control-Allow-Origin",
+                        "*"));
+        http.headers().addHeaderWriter(
+                new StaticHeadersWriter("Access-Control-Allow-Headers",
+                        "Origin, X-Requested-With, Content-Type, Accept"));
     }
 }
