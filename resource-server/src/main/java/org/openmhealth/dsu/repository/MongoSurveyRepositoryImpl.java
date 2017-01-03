@@ -53,9 +53,9 @@ public class MongoSurveyRepositoryImpl implements CustomSurveyRepository {
 
         Query query = new Query();
 
-        query.addCriteria(where("user_id").is(searchCriteria.getUserId()));
-        query.addCriteria(where("schema_id.version.major").is(searchCriteria.getSchemaVersion().getMajor()));
-        query.addCriteria(where("schema_id.version.minor").gte(searchCriteria.getSchemaVersion().getMinor()));
+        if (searchCriteria.getUserId() != null) {
+            query.addCriteria(where("user_id").is(searchCriteria.getUserId()));
+        }
 
         return query;
     }

@@ -93,8 +93,6 @@ public class SurveyController {
             @RequestParam(value = RESULT_LIMIT_PARAMETER, defaultValue = DEFAULT_RESULT_LIMIT) final Integer limit,
             Authentication authentication) {
 
-        String endUserId = getEndUserId(authentication);
-
         SurveySearchCriteria searchCriteria = new SurveySearchCriteria(schemaVersion);
 
         Iterable<Survey> surveys = surveyService.findBySearchCriteria(searchCriteria, offset, limit);
@@ -178,7 +176,7 @@ public class SurveyController {
      *
      * @param survey the survey to write
      */
-    // only allow clients with write scope to write data points
+    // only allow clients with write scope to write surveys
     @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + SURVEY_WRITE_SCOPE + "')")
     @RequestMapping(value = "/surveys", method = POST, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> writeSurvey(@RequestBody @Valid Survey survey, Authentication authentication) {

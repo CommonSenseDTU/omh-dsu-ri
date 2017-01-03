@@ -8,7 +8,6 @@ import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.openmhealth.schema.domain.omh.SchemaVersion.isValidVersion;
 
 /**
@@ -22,14 +21,10 @@ public class SurveySearchCriteria {
 
     public SurveySearchCriteria(String schemaVersion) {
 
-        checkNotNull(userId);
-        checkArgument(!isNullOrEmpty(userId));
-
         checkNotNull(schemaVersion);
 
         checkArgument(isValidVersion(schemaVersion));
 
-        this.userId = userId;
         this.schemaVersion = new SchemaVersion(schemaVersion);
     }
 
