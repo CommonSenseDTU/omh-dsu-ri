@@ -154,8 +154,6 @@ public class SurveyController {
     // TODO confirm if HEAD handling needs anything additional
     // only allow clients with read scope to read a survey
     @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + SURVEY_READ_SCOPE + "')")
-    // ensure that the returned survey belongs to the user associated with the access token
-    @PostAuthorize("returnObject.body == null || returnObject.body.header.userId == principal.username")
     @RequestMapping(value = "/surveys/{id}", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
     public
     @ResponseBody
