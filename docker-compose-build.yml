@@ -2,6 +2,11 @@
 mongo:
   image: mongo:latest
 
+# A separate mongo database is used for private data such as name and signature
+# which can be legally required to be stored elsewhere.
+private:
+  image: mongo:latest
+
 # PostgreSQL is used to store OAuth 2.0 client credentials and access tokens. Instead of running the vanilla image,
 # this Compose file adds initialization scripts to the vanilla image and runs that. The scripts create the database
 # tables necessary to store credentials and tokens.
@@ -20,6 +25,7 @@ resourceserver:
   build: resource-server/docker
   links:
     - mongo:omh-mongo
+    - private:priv-mongo
     - postgres:omh-postgres
   ports:
     - "8083:8083"
