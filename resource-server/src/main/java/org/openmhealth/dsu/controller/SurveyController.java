@@ -150,11 +150,7 @@ public class SurveyController {
      * @param id the identifier of the survey to read
      * @return a matching survey, if found
      */
-    // TODO can identifiers be relative, e.g. to a namespace?
-    // TODO confirm if HEAD handling needs anything additional
-    // only allow clients with read scope to read a survey
-    @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + SURVEY_READ_SCOPE + "')")
-    @RequestMapping(value = "/surveys/{id}", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/consentflow/surveys/{id}", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
     public
     @ResponseBody
     ResponseEntity<Survey> readSurvey(@PathVariable String id) {
