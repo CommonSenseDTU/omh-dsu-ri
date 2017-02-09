@@ -145,12 +145,34 @@ public class SurveyController {
     }
 
     /**
-     * Reads a survey.
+     * Reads a survey without authorization.
      *
      * @param id the identifier of the survey to read
      * @return a matching survey, if found
      */
     @RequestMapping(value = "/consentflow/surveys/{id}", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
+    public
+    @ResponseBody
+    ResponseEntity<Survey> readPublicSurvey(@PathVariable String id) {
+
+        Optional<Survey> survey = surveyService.findOne(id);
+
+        if (!survey.isPresent()) {
+            return new ResponseEntity<>(NOT_FOUND);
+        }
+
+        // FIXME test @PostAuthorize
+        return new ResponseEntity<>(survey.get(), OK);
+    }
+
+    /**
+     * Reads a survey.
+     *
+     * @param id the identifier of the survey to read
+     * @return a matching survey, if found
+     */
+    @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + SURVEY_READ_SCOPE + "')")
+    @RequestMapping(value = "/surveys/{id}", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
     public
     @ResponseBody
     ResponseEntity<Survey> readSurvey(@PathVariable String id) {
