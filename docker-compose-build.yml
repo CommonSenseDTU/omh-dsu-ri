@@ -25,7 +25,15 @@ resourceserver:
   build: resource-server/docker
   links:
     - mongo:omh-mongo
-    - private:priv-mongo
     - postgres:omh-postgres
   ports:
     - "8083:8083"
+
+privateserver:
+  build: private-server/docker
+  links:
+    - mongo:priv-mongo
+    - postgres:omh-postgres
+  ports:
+    - "8084:8084"
+

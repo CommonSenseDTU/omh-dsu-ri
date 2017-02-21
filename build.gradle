@@ -75,7 +75,8 @@ configure(project(":shared")) {
 
 configure([
         project(":authorization-server"),
-        project(":resource-server")]) {
+        project(":resource-server"),
+        project(":private-server")]) {
 
     bootRepackage {
         mainClass = "org.openmhealth.dsu.configuration.Application"
@@ -121,3 +122,4 @@ configure([
 task wrapper(type: Wrapper) {
     gradleVersion = '2.11'
 }
+

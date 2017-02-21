@@ -28,10 +28,6 @@ spring:
       host: omh-mongo
       database: omh
       #port: 27017
-  privatedata:
-    mongodb:
-      host: priv-mongo
-      database: private
   datasource:
     driverClassName: org.postgresql.Driver
     url: jdbc:postgresql://omh-postgres:5432/omh
