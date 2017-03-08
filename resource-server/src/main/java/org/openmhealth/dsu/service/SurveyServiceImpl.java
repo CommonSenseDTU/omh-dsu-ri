@@ -1,7 +1,9 @@
 package org.openmhealth.dsu.service;
 
 import org.openmhealth.dsu.domain.SurveySearchCriteria;
+import org.openmhealth.dsu.domain.StepSearchCriteria;
 import org.openmhealth.dsu.repository.SurveyRepository;
+import org.openmhealth.schema.domain.ork.Step;
 import org.openmhealth.schema.domain.ork.Survey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,6 +65,12 @@ public class SurveyServiceImpl implements SurveyService {
         checkArgument(limit == null || limit >= 0);
 
         return repository.findBySearchCriteria(searchCriteria, offset, limit);
+    }
+
+    public Optional<Step> findBySearchCriteria(StepSearchCriteria searchCriteria) {
+        checkNotNull(searchCriteria);
+
+        return repository.findBySearchCriteria(searchCriteria);
     }
 
     @Override

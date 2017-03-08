@@ -2,19 +2,19 @@ package org.openmhealth.dsu.controller;
 
 import org.openmhealth.dsu.domain.EndUserUserDetails;
 import org.openmhealth.dsu.domain.SurveySearchCriteria;
+import org.openmhealth.dsu.domain.StepSearchCriteria;
 import org.openmhealth.dsu.service.SurveyService;
 import org.openmhealth.schema.domain.ork.ConsentDocument;
+import org.openmhealth.schema.domain.ork.Step;
 import org.openmhealth.schema.domain.ork.Survey;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.lang.reflect.Field;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
@@ -163,6 +163,33 @@ public class SurveyController {
 
         // FIXME test @PostAuthorize
         return new ResponseEntity<>(survey.get(), OK);
+    }
+
+    /**
+     * Reads a task step.
+     *
+     * @param surveyId the identifier of the survey where the task is located
+     * @param taskId the identifier of the task to read
+     * @return a matching step, if found
+     */
+    @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + SURVEY_READ_SCOPE + "')")
+    @RequestMapping(value = "/surveys/{surveyId}/tasks/{taskId}", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
+    public
+    @ResponseBody
+    ResponseEntity<Step> readStep(@PathVariable String surveyId, @PathVariable String taskId) {
+
+        StepSearchCriteria searchCriteria = new StepSearchCriteria();
+        searchCriteria.setId(taskId);
+        searchCriteria.setSurveyId(surveyId);
+
+        Optional<Step> step = surveyService.findBySearchCriteria(searchCriteria);
+
+        if (!step.isPresent()) {
+            return new ResponseEntity<>(NOT_FOUND);
+        }
+
+        // FIXME test @PostAuthorize
+        return new ResponseEntity<Step>(step.get(), OK);
     }
 
     /**

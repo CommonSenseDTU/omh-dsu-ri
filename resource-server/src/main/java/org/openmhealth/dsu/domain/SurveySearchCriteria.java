@@ -18,6 +18,7 @@ public class SurveySearchCriteria {
     private String userId;
     private SchemaVersion schemaVersion;
     private Range<OffsetDateTime> creationTimestampRange;
+    private String id;
 
     public SurveySearchCriteria(String schemaVersion) {
 
@@ -48,4 +49,11 @@ public class SurveySearchCriteria {
         this.creationTimestampRange = creationTimestampRange;
     }
 
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 }

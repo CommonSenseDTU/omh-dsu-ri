@@ -1,6 +1,8 @@
 package org.openmhealth.dsu.service;
 
 import org.openmhealth.dsu.domain.SurveySearchCriteria;
+import org.openmhealth.dsu.domain.StepSearchCriteria;
+import org.openmhealth.schema.domain.ork.Step;
 import org.openmhealth.schema.domain.ork.Survey;
 
 import javax.annotation.Nullable;
@@ -21,6 +23,8 @@ public interface SurveyService {
 
     Iterable<Survey> findBySearchCriteria(SurveySearchCriteria searchCriteria, @Nullable Integer offset,
                                           @Nullable Integer limit);
+
+    Optional<Step> findBySearchCriteria(StepSearchCriteria searchCriteria);
 
     Survey save(Survey survey);
 
