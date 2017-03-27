@@ -2,6 +2,7 @@ package org.openmhealth.dsu.service;
 
 import org.openmhealth.dsu.domain.SurveySearchCriteria;
 import org.openmhealth.dsu.domain.StepSearchCriteria;
+import org.openmhealth.schema.domain.omh.ParticipationMetaData;
 import org.openmhealth.schema.domain.ork.Step;
 import org.openmhealth.schema.domain.ork.Survey;
 
@@ -33,4 +34,6 @@ public interface SurveyService {
     void delete(String id);
 
     Long deleteByIdAndUserId(String id, String userId);
+
+    void updateMetaData(ParticipationMetaData metaData, String endUserId);
 }

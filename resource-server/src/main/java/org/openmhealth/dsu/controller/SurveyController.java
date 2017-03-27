@@ -4,6 +4,7 @@ import org.openmhealth.dsu.domain.EndUserUserDetails;
 import org.openmhealth.dsu.domain.SurveySearchCriteria;
 import org.openmhealth.dsu.domain.StepSearchCriteria;
 import org.openmhealth.dsu.service.SurveyService;
+import org.openmhealth.schema.domain.omh.ParticipationMetaData;
 import org.openmhealth.schema.domain.ork.ConsentDocument;
 import org.openmhealth.schema.domain.ork.Step;
 import org.openmhealth.schema.domain.ork.Survey;
@@ -104,6 +105,22 @@ public class SurveyController {
         // headers.set("Previous");
 
         return new ResponseEntity<>(surveys, headers, OK);
+    }
+
+    /**
+     * Updates metadata for a user in a survey.
+     * The authenticated client must either be the owner of the survey or the participant named by the user id.
+     *
+     * @param metaData the meta data to store
+     */
+    @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "')")
+    @RequestMapping(value = "/surveys/{id}/metadata", method = POST, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> writeMetaData(@RequestBody @Valid ParticipationMetaData metaData, Authentication authentication) {
+
+        String endUserId = getEndUserId(authentication);
+        surveyService.updateMetaData(metaData, endUserId);
+
+        return new ResponseEntity<>(OK);
     }
 
     /**

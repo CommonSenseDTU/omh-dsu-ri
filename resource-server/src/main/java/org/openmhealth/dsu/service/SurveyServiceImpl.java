@@ -2,7 +2,9 @@ package org.openmhealth.dsu.service;
 
 import org.openmhealth.dsu.domain.SurveySearchCriteria;
 import org.openmhealth.dsu.domain.StepSearchCriteria;
+import org.openmhealth.dsu.repository.MetaDataRepository;
 import org.openmhealth.dsu.repository.SurveyRepository;
+import org.openmhealth.schema.domain.omh.ParticipationMetaData;
 import org.openmhealth.schema.domain.ork.Step;
 import org.openmhealth.schema.domain.ork.Survey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class SurveyServiceImpl implements SurveyService {
     @Autowired
     private SurveyRepository repository;
+
+    @Autowired
+    private MetaDataRepository metaDataRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -109,5 +114,24 @@ public class SurveyServiceImpl implements SurveyService {
         checkArgument(!userId.isEmpty());
 
         return repository.deleteByIdAndUserId(id, userId);
+    }
+
+    @Override
+    public void updateMetaData(ParticipationMetaData metaData, String endUserId) {
+        checkNotNull(metaData);
+        checkNotNull(endUserId);
+        checkNotNull(metaData.getUserId());
+        checkNotNull(metaData.getData());
+        checkNotNull(metaData.getSurveyId());
+        checkArgument(!metaData.getUserId().isEmpty());
+        checkArgument(!metaData.getSurveyId().isEmpty());
+
+        if (!endUserId.equals(metaData.getUserId())) {
+            Optional<Survey> survey = repository.findOne(metaData.getSurveyId());
+            checkArgument(survey.isPresent());
+            checkArgument(survey.get().getUserId().equals(endUserId));
+        }
+
+        metaDataRepository.save(metaData);
     }
 }
