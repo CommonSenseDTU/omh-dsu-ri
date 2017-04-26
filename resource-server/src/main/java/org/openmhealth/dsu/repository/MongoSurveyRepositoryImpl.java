@@ -65,7 +65,7 @@ public class MongoSurveyRepositoryImpl implements CustomSurveyRepository {
 
         Query query = new Query();
         query.addCriteria(where("id").is(id));
-        query.addCriteria(where("participant_ids").not().is(participantId));
+        query.addCriteria(where("participant_ids").ne(participantId));
 
         return mongoOperations.findOne(query, Survey.class);
     }
