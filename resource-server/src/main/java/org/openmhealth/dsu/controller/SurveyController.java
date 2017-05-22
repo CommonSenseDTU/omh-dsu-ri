@@ -3,6 +3,7 @@ package org.openmhealth.dsu.controller;
 import org.openmhealth.dsu.domain.EndUserUserDetails;
 import org.openmhealth.dsu.domain.SurveySearchCriteria;
 import org.openmhealth.dsu.domain.StepSearchCriteria;
+import org.openmhealth.dsu.service.DataPointService;
 import org.openmhealth.dsu.service.SurveyService;
 import org.openmhealth.schema.domain.omh.ParticipationMetaData;
 import org.openmhealth.schema.domain.ork.ConsentDocument;
@@ -16,6 +17,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
@@ -36,6 +39,10 @@ public class SurveyController {
     public static final String RESULT_OFFSET_PARAMETER = "skip";
     public static final String RESULT_LIMIT_PARAMETER = "limit";
     public static final String DEFAULT_RESULT_LIMIT = "100";
+    public static final String SURVEY_ID_PARAMETER = "survey_id";
+
+    @Autowired
+    private DataPointService dataPointService;
 
     @Autowired
     private SurveyService surveyService;
@@ -57,7 +64,7 @@ public class SurveyController {
             @RequestParam(value = SCHEMA_VERSION_PARAMETER) final String schemaVersion,
             @RequestParam(value = RESULT_OFFSET_PARAMETER, defaultValue = "0") final Integer offset,
             @RequestParam(value = RESULT_LIMIT_PARAMETER, defaultValue = DEFAULT_RESULT_LIMIT) final Integer limit,
-            Authentication authentication) {
+            Authentication authentication) throws NoSuchAlgorithmException {
 
         String endUserId = getEndUserId(authentication);
 
@@ -115,7 +122,7 @@ public class SurveyController {
      */
     @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "')")
     @RequestMapping(value = "/surveys/{id}/metadata", method = POST, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> writeMetaData(@RequestBody @Valid ParticipationMetaData metaData, Authentication authentication) {
+    public ResponseEntity<?> writeMetaData(@RequestBody @Valid ParticipationMetaData metaData, Authentication authentication) throws NoSuchAlgorithmException {
 
         String endUserId = getEndUserId(authentication);
         surveyService.updateMetaData(metaData, endUserId);
@@ -156,9 +163,22 @@ public class SurveyController {
     }
 
 
-    public String getEndUserId(Authentication authentication) {
+    public static String getSHA1(String data) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest=MessageDigest.getInstance("SHA1");
 
-        return ((EndUserUserDetails) authentication.getPrincipal()).getUsername();
+        messageDigest.update(data.getBytes());
+        byte[] digest = messageDigest.digest();
+        StringBuffer sb = new StringBuffer();
+        for (byte b : digest) {
+            sb.append(Integer.toHexString((int) (b & 0xff)));
+        }
+        return sb.toString();
+    }
+
+    public String getEndUserId(Authentication authentication) throws NoSuchAlgorithmException {
+
+        String username = ((EndUserUserDetails) authentication.getPrincipal()).getUsername();
+        return getSHA1(username);
     }
 
     /**
@@ -231,6 +251,7 @@ public class SurveyController {
         return new ResponseEntity<>(survey.get(), OK);
     }
 
+
     /**
      * Writes a survey.
      *
@@ -239,7 +260,7 @@ public class SurveyController {
     // only allow clients with write scope to write surveys
     @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + SURVEY_WRITE_SCOPE + "')")
     @RequestMapping(value = "/surveys", method = POST, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> writeSurvey(@RequestBody @Valid Survey survey, Authentication authentication) {
+    public ResponseEntity<?> writeSurvey(@RequestBody @Valid Survey survey, Authentication authentication) throws NoSuchAlgorithmException {
 
         if (survey.getConsentDocument() == null) {
             return new ResponseEntity<>(BAD_REQUEST);

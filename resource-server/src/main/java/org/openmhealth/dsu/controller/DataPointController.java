@@ -36,6 +36,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.lang.reflect.Field;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -106,7 +108,7 @@ public class DataPointController {
             @RequestParam(value = RESULT_OFFSET_PARAMETER, defaultValue = "0") final Integer offset,
             @RequestParam(value = RESULT_LIMIT_PARAMETER, defaultValue = DEFAULT_RESULT_LIMIT) final Integer limit,
             @RequestParam(value = SURVEY_GUID_PARAMETER, required = false) final String surveyGuid,
-            Authentication authentication) {
+            Authentication authentication) throws NoSuchAlgorithmException {
 
         // TODO add validation or explicitly comment that this is handled using exception translators
 
@@ -139,9 +141,22 @@ public class DataPointController {
         return new ResponseEntity<>(dataPoints, headers, OK);
     }
 
-    public String getEndUserId(Authentication authentication) {
+    public static String getSHA1(String data) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest=MessageDigest.getInstance("SHA1");
 
-        return ((EndUserUserDetails) authentication.getPrincipal()).getUsername();
+        messageDigest.update(data.getBytes());
+        byte[] digest = messageDigest.digest();
+        StringBuffer sb = new StringBuffer();
+        for (byte b : digest) {
+            sb.append(Integer.toHexString((int) (b & 0xff)));
+        }
+        return sb.toString();
+    }
+
+    public String getEndUserId(Authentication authentication) throws NoSuchAlgorithmException {
+
+        String username = ((EndUserUserDetails) authentication.getPrincipal()).getUsername();
+        return getSHA1(username);
     }
 
     /**
@@ -179,7 +194,7 @@ public class DataPointController {
     // only allow clients with write scope to write data points
     @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + DATA_POINT_WRITE_SCOPE + "')")
     @RequestMapping(value = "/dataPoints", method = POST, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> writeDataPoint(@RequestBody @Valid DataPoint dataPoint, Authentication authentication) {
+    public ResponseEntity<?> writeDataPoint(@RequestBody @Valid DataPoint dataPoint, Authentication authentication) throws NoSuchAlgorithmException {
 
         // FIXME test validation
         if (dataPointService.exists(dataPoint.getHeader().getId())) {
