@@ -17,8 +17,10 @@
 package org.openmhealth.dsu.controller;
 
 import com.google.common.collect.Range;
+import org.apache.log4j.Logger;
 import org.openmhealth.dsu.domain.DataPointSearchCriteria;
 import org.openmhealth.dsu.domain.EndUserUserDetails;
+import org.openmhealth.dsu.domain.SimpleClientDetails;
 import org.openmhealth.dsu.service.DataPointService;
 import org.openmhealth.dsu.service.SurveyService;
 import org.openmhealth.schema.domain.omh.DataPoint;
@@ -32,6 +34,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -89,9 +92,10 @@ public class DataPointController {
      */
     // TODO confirm if HEAD handling needs anything additional
     // only allow clients with read scope to read data points
-    @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + DATA_POINT_READ_SCOPE + "')")
+    @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and (#oauth2.hasScope('" + DATA_POINT_READ_SCOPE + "') " +
+            "or #oauth2.hasScope('" + PRIVATE_READ_SCOPE + "'))")
     // TODO look into any meaningful @PostAuthorize filtering
-    @RequestMapping(value = "/dataPoints", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/private/dataPoints", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
     public
     @ResponseBody
     ResponseEntity<Iterable<DataPoint>> readDataPoints(
@@ -124,7 +128,7 @@ public class DataPointController {
             searchCriteria.setCreationTimestampRange(Range.lessThan(createdBefore));
         }
 
-        if (surveyGuid != null) {
+        if (surveyGuid != null && endUserHasScope(authentication, PRIVATE_READ_SCOPE)) {
             searchCriteria.setSurveyGuid(surveyGuid);
         }
 
@@ -137,6 +141,11 @@ public class DataPointController {
         // headers.set("Previous");
 
         return new ResponseEntity<>(dataPoints, headers, OK);
+    }
+
+    public boolean endUserHasScope(Authentication authentication, String scope) {
+
+        return ((SimpleClientDetails) authentication.getDetails()).getScope().contains(scope);
     }
 
     public String getEndUserId(Authentication authentication) {
@@ -156,7 +165,7 @@ public class DataPointController {
     @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + DATA_POINT_READ_SCOPE + "')")
     // ensure that the returned data point belongs to the user associated with the access token
     @PostAuthorize("returnObject.body == null || returnObject.body.header.userId == principal.username")
-    @RequestMapping(value = "/dataPoints/{id}", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/private/dataPoints/{id}", method = {HEAD, GET}, produces = APPLICATION_JSON_VALUE)
     public
     @ResponseBody
     ResponseEntity<DataPoint> readDataPoint(@PathVariable String id) {
@@ -171,14 +180,14 @@ public class DataPointController {
         return new ResponseEntity<>(dataPoint.get(), OK);
     }
 
-    /**
+    /**Map<String, Object>
      * Writes a data point.
      *
      * @param dataPoint the data point to write
      */
     // only allow clients with write scope to write data points
     @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + DATA_POINT_WRITE_SCOPE + "')")
-    @RequestMapping(value = "/dataPoints", method = POST, consumes = APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/private/dataPoints", method = POST, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<?> writeDataPoint(@RequestBody @Valid DataPoint dataPoint, Authentication authentication) {
 
         // FIXME test validation
@@ -229,8 +238,8 @@ public class DataPointController {
     // only allow clients with delete scope to delete data points
     @PreAuthorize(
             "#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + DATA_POINT_DELETE_SCOPE + "')")
-    @RequestMapping(value = "/dataPoints/{id}", method = RequestMethod.DELETE)
-    public ResponseEntity<?> deleteDataPoint(@PathVariable String id, Authentication authentication) throws NoSuchAlgorithmException {
+    @RequestMapping(value = "/private/dataPoints/{id}", method = RequestMethod.DELETE)
+    public ResponseEntity<?> deleteDataPoint(@PathVariable String id, Authentication authentication) {
 
         String endUserId = getEndUserId(authentication);
 
