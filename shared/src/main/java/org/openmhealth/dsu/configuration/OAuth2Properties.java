@@ -32,4 +32,5 @@ public interface OAuth2Properties {
     String SURVEY_READ_SCOPE = "read_surveys";
     String SURVEY_WRITE_SCOPE = "write_surveys";
     String SURVEY_DELETE_SCOPE = "delete_surveys";
+    String PRIVATE_READ_SCOPE = "read_private";
 }
