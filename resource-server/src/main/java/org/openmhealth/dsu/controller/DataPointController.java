@@ -17,10 +17,12 @@
 package org.openmhealth.dsu.controller;
 
 import com.google.common.collect.Range;
+import org.apache.log4j.Logger;
 import org.openmhealth.dsu.domain.DataPointSearchCriteria;
 import org.openmhealth.dsu.domain.EndUserUserDetails;
 import org.openmhealth.dsu.service.DataPointService;
 import org.openmhealth.dsu.service.SurveyService;
+import org.openmhealth.schema.domain.omh.Batch;
 import org.openmhealth.schema.domain.omh.DataPoint;
 import org.openmhealth.schema.domain.omh.DataPointHeader;
 import org.openmhealth.schema.domain.ork.Confidentiality;
@@ -39,6 +41,7 @@ import java.lang.reflect.Field;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -186,7 +189,7 @@ public class DataPointController {
         return new ResponseEntity<>(dataPoint.get(), OK);
     }
 
-    /**
+    /**Map<String, Object>
      * Writes a data point.
      *
      * @param dataPoint the data point to write
@@ -208,13 +211,49 @@ public class DataPointController {
 
         dataPointService.save(dataPoint);
 
-        addParticipantToSurvey(dataPoint, endUserId);
+        addParticipantToSurvey(dataPoint.getHeader().getConsent(), endUserId);
 
         return new ResponseEntity<>(CREATED);
     }
 
-    private void addParticipantToSurvey(@RequestBody @Valid DataPoint dataPoint, String endUserId) {
-        InformedConsent consent = dataPoint.getHeader().getConsent();
+    /**Map<String, Object>
+     * Writes a data point.
+     *
+     * @param batch the data point to write
+     */
+    // only allow clients with write scope to write data points
+    @PreAuthorize("#oauth2.clientHasRole('" + CLIENT_ROLE + "') and #oauth2.hasScope('" + DATA_POINT_WRITE_SCOPE + "')")
+    @RequestMapping(value = "/batch/dataPoints", method = POST, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> writeDataPoints(@RequestBody @Valid Batch batch, Authentication authentication) throws NoSuchAlgorithmException {
+
+        DataPointHeader commonHeader = batch.getHeader();
+
+        String endUserId = getEndUserId(authentication);
+
+        // set the owner of the data point to be the user associated with the access token
+        setUserId(batch.getHeader(), endUserId);
+
+        for (DataPoint dataPoint : (ArrayList<DataPoint>) batch.getDataPoints()) {
+            DataPointHeader.Builder builder = new DataPointHeader.Builder(
+                    dataPoint.getHeader().getId(),
+                    dataPoint.getHeader().getBodySchemaId(),
+                    dataPoint.getHeader().getCreationDateTime());
+            builder.setAcquisitionProvenance(commonHeader.getAcquisitionProvenance())
+                    .setConsent(commonHeader.getConsent())
+                    .setUserId(commonHeader.getUserId())
+                    .setAdditionalProperties(commonHeader.getAdditionalProperties());
+            setHeader(dataPoint, builder.build());
+            dataPointService.save(dataPoint);
+        }
+
+        if (commonHeader.getConsent() != null) {
+            addParticipantToSurvey(commonHeader.getConsent(), endUserId);
+        }
+
+        return new ResponseEntity<>(CREATED);
+    }
+
+    private void addParticipantToSurvey(@RequestBody @Valid InformedConsent consent, String endUserId) {
         if (consent != null && consent.getConfidentiality() != Confidentiality.PRIVATE) {
             Survey survey = surveyService.findOneWithoutParticipantId(consent.getSurveyId(), endUserId);
             if (survey != null) {
@@ -233,6 +272,19 @@ public class DataPointController {
         }
         catch (NoSuchFieldException | IllegalAccessException e) {
             throw new IllegalStateException("A user identifier property can't be changed in the data point header.", e);
+        }
+    }
+
+
+    // this is currently implemented using reflection, until we see other use cases where mutability would be useful
+    private void setHeader(DataPoint dataPoint, DataPointHeader header) {
+        try {
+            Field headerField = dataPoint.getClass().getDeclaredField("header");
+            headerField.setAccessible(true);
+            headerField.set(dataPoint, header);
+        }
+        catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new IllegalStateException("A header identifier property can't be changed in the data point.", e);
         }
     }
 
