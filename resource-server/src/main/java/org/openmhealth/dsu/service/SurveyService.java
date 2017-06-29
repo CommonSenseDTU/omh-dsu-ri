@@ -5,6 +5,7 @@ import org.openmhealth.dsu.domain.StepSearchCriteria;
 import org.openmhealth.schema.domain.omh.ParticipationMetaData;
 import org.openmhealth.schema.domain.ork.Step;
 import org.openmhealth.schema.domain.ork.Survey;
+import org.openmhealth.schema.domain.ork.Task;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
