@@ -37,3 +37,13 @@ privateserver:
   ports:
     - "8084:8084"
 
+rabbit:
+  image: rabbitmq:3-management
+  hostname: researcher-rabbit
+  domainname: researcher-rabbit.commonsense.cogsys.dtu.dk
+  ports:
+    - "4369:4369" # epmd, a peer discovery service used by RabbitMQ nodes and CLI tools
+    - "5671:5671" # used by AMQP 0-9-1 and 1.0 clients without 
+    - "5672:5672" # ... and with TLS
+    - "15672:15672" # HTTP API clients and rabbitmqadmin
+    - "25672:25672" # used by Erlang distribution for inter-node and CLI tools communication
