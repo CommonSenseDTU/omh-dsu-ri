@@ -18,10 +18,14 @@ package org.openmhealth.dsu.controller;
 
 
 import org.openmhealth.dsu.domain.EndUserRegistrationData;
+import org.openmhealth.dsu.domain.EndUserUserDetails;
 import org.openmhealth.dsu.service.EndUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,8 +36,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.openmhealth.dsu.configuration.OAuth2Properties.CLIENT_ROLE;
 import static org.springframework.http.HttpStatus.*;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 
 /**
@@ -49,7 +55,6 @@ public class EndUserController {
 
     @Autowired
     private EndUserService endUserService;
-
 
     /**
      * Registers a new user.
