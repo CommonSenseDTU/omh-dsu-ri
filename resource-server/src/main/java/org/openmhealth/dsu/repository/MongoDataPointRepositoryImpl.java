@@ -17,6 +17,7 @@
 package org.openmhealth.dsu.repository;
 
 import com.google.common.collect.Range;
+import org.apache.log4j.Logger;
 import org.openmhealth.dsu.domain.DataPointSearchCriteria;
 import org.openmhealth.schema.domain.omh.DataPoint;
 import org.openmhealth.schema.domain.ork.Confidentiality;
@@ -90,6 +91,8 @@ public class MongoDataPointRepositoryImpl implements CustomDataPointRepository {
 
         addSurveyCriteria(query, searchCriteria.getSurveyGuid());
 
+        Logger log = Logger.getLogger(this.getClass());
+        log.info("Created query: " + query.toString());
 
         return query;
     }
