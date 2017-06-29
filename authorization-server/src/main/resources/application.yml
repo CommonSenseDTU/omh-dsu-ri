@@ -16,6 +16,7 @@
 
 # FIXME revise this if mixing data stores
 dataStore: mongo
+hasPrivateStore: false
 
 server:
   port: 8082
